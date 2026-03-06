@@ -1,0 +1,37 @@
+spring:
+    datasource:
+        url: jdbc:postgresql://localhost:5432/suporte_db
+        username: postgres
+        password: admin
+
+    flyway:
+        enabled: true
+        locations: classpath:db/migration
+        baseline-on-migrate: true
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        show-sql: false
+        properties:
+            hibernate:
+                format_sql: true
+    jackson:
+        serialization:
+            write-dates-as-timestamps: false
+        time-zone: America/Sao_Paulo
+
+jwt:
+    secret: yrX1Pg0omEMYaDgrBv0civYFd5tUexqqA/HdRCO4EKWYx6DAeWZjSLbIkn2wweRk
+    expiration: 86400000
+
+sla:
+    alerta-minutos: 5
+    critico-minutos: 15
+    escalado-minutos: 30
+
+server:
+    port: 8080
+
+logging:
+    level:
+        org.springframework.security: TRACE
