@@ -16,5 +16,6 @@ public class LoginResponse {
         private UUID id;
         private String nome;
         private Perfil perfil;
+        private String email;
     }
 }
