@@ -29,6 +29,6 @@ public class AuthController {
         String token = jwtUtil.generateToken(ud);
         Usuario u = usuarioRepository.findByEmail(req.getEmail()).orElseThrow();
         return ResponseEntity.ok(new LoginResponse(token,
-                new LoginResponse.UsuarioInfo(u.getId(), u.getNome(), u.getPerfil())));
+                new LoginResponse.UsuarioInfo(u.getId(), u.getNome(), u.getPerfil(), u.getEmail())));
     }
 }

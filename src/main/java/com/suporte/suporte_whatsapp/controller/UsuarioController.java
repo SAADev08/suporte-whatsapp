@@ -5,9 +5,13 @@ import com.suporte.suporte_whatsapp.model.enums.Perfil;
 import com.suporte.suporte_whatsapp.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -17,11 +21,12 @@ public class UsuarioController {
     private final UsuarioService service;
 
     @GetMapping
-    public ResponseEntity<List<UsuarioResponse>> listar(
+    public ResponseEntity<Page<UsuarioResponse>> listar(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String email,
-            @RequestParam(required = false) Perfil perfil) {
-        return ResponseEntity.ok(service.listar(nome, email, perfil));
+            @RequestParam(required = false) Perfil perfil,
+            @PageableDefault(size = 20, sort = "nome", direction = Sort.Direction.ASC) Pageable pageable) {
+        return ResponseEntity.ok(service.listar(nome, email, perfil, pageable));
     }
 
     @GetMapping("/{id}")

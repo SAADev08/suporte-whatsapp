@@ -4,9 +4,13 @@ import com.suporte.suporte_whatsapp.dto.*;
 import com.suporte.suporte_whatsapp.service.ClienteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/clientes")
@@ -16,11 +20,12 @@ public class ClienteController {
     private final ClienteService service;
 
     @GetMapping
-    public ResponseEntity<List<ClienteResponse>> listar(
+    public ResponseEntity<Page<ClienteResponse>> listar(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String cidade,
-            @RequestParam(required = false) String cpfCnpj) {
-        return ResponseEntity.ok(service.listar(nome, cidade, cpfCnpj));
+            @RequestParam(required = false) String cpfCnpj,
+            @PageableDefault(size = 20, sort = "nome", direction = Sort.Direction.ASC) Pageable pageable) {
+        return ResponseEntity.ok(service.listar(nome, cidade, cpfCnpj, pageable));
     }
 
     @GetMapping("/{id}")

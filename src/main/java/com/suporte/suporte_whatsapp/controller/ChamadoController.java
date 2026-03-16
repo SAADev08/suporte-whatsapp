@@ -5,6 +5,10 @@ import com.suporte.suporte_whatsapp.model.enums.*;
 import com.suporte.suporte_whatsapp.service.ChamadoService;
 import jakarta.validation.Valid;
 import lombok.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -17,12 +21,13 @@ public class ChamadoController {
     private final ChamadoService service;
 
     @GetMapping
-    public ResponseEntity<List<ChamadoResponse>> listar(
+    public ResponseEntity<Page<ChamadoResponse>> listar(
             @RequestParam(required = false) ChamadoStatus status,
             @RequestParam(required = false) Origem origem,
             @RequestParam(required = false) UUID contatoId,
-            @RequestParam(required = false) UUID usuarioId) {
-        return ResponseEntity.ok(service.listar(status, origem, contatoId, usuarioId));
+            @RequestParam(required = false) UUID usuarioId,
+            @PageableDefault(size = 20, sort = "dtAbertura", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(service.listar(status, origem, contatoId, usuarioId, pageable));
     }
 
     @GetMapping("/{id}")
