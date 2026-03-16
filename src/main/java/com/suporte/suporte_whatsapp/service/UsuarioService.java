@@ -4,7 +4,10 @@ import com.suporte.suporte_whatsapp.dto.*;
 import com.suporte.suporte_whatsapp.model.Usuario;
 import com.suporte.suporte_whatsapp.model.enums.Perfil;
 import com.suporte.suporte_whatsapp.repository.UsuarioRepository;
+import com.suporte.suporte_whatsapp.specification.UsuarioSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +20,10 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public List<UsuarioResponse> listar(String nome, String email, Perfil perfil) {
-        return usuarioRepository.findAllComFiltro(nome, email, perfil != null ? perfil.name() : null)
-                .stream().map(UsuarioResponse::from).toList();
+    public Page<UsuarioResponse> listar(String nome, String email, Perfil perfil, Pageable pageable) {
+        return usuarioRepository
+                .findAll(UsuarioSpecification.comFiltros(nome, email, perfil), pageable)
+                .map(UsuarioResponse::from);
     }
 
     public UsuarioResponse buscarPorId(UUID id) {

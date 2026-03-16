@@ -4,7 +4,10 @@ import com.suporte.suporte_whatsapp.dto.*;
 import com.suporte.suporte_whatsapp.model.*;
 import com.suporte.suporte_whatsapp.model.enums.*;
 import com.suporte.suporte_whatsapp.repository.*;
+import com.suporte.suporte_whatsapp.specification.ChamadoSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,14 +27,11 @@ public class ChamadoService {
     private final SubtipoRepository subtipoRepository;
     private final SimpMessagingTemplate ws;
 
-    public List<ChamadoResponse> listar(ChamadoStatus status, Origem origem,
-            UUID contatoId, UUID usuarioId) {
-        return chamadoRepository.findAllComFiltro(
-                status != null ? status.name() : null,
-                origem != null ? origem.name() : null,
-                contatoId != null ? contatoId.toString() : null,
-                usuarioId != null ? usuarioId.toString() : null)
-                .stream().map(ChamadoResponse::from).toList();
+    public Page<ChamadoResponse> listar(ChamadoStatus status, Origem origem,
+            UUID contatoId, UUID usuarioId, Pageable pageable) {
+        return chamadoRepository
+                .findAll(ChamadoSpecification.comFiltros(status, origem, contatoId, usuarioId), pageable)
+                .map(ChamadoResponse::from);
     }
 
     public ChamadoResponse buscarPorId(UUID id) {
