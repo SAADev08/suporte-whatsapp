@@ -1,6 +1,6 @@
 package com.suporte.suporte_whatsapp.security;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.*;
@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,14 +17,25 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final JwtAuthFilter jwtAuthFilter;
+        private final JwtUtil jwtUtil;
+        private final UserDetailsService userDetailsService;
+
+        @Value("${zapi.webhook-secret:}")
+        private String webhookSecret;
+
+        public SecurityConfig(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+                this.jwtUtil = jwtUtil;
+                this.userDetailsService = userDetailsService;
+        }
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,7 +52,18 @@ public class SecurityConfig {
                                                 .anyRequest().authenticated())
                                 .sessionManagement(sm -> sm
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint((request, response, authException) -> {
+                                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                                        response.setContentType("application/json");
+                                                        response.getWriter().write("{\"error\":\"Não autorizado\"}");
+                                                }))
+                                .addFilterBefore(
+                                                new WebHookAuthFilter(webhookSecret),
+                                                UsernamePasswordAuthenticationFilter.class)
+                                .addFilterBefore(
+                                                new JwtAuthFilter(jwtUtil, userDetailsService),
+                                                UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
         }
