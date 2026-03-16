@@ -1,0 +1,51 @@
+# =============================================================================
+# application-prod.yml — sobrescritas para o perfil de PRODUÇÃO
+#
+# Este arquivo é carregado automaticamente quando:
+#   SPRING_PROFILES_ACTIVE=prod
+#
+# NUNCA versionar secrets reais aqui — use variáveis de ambiente.
+# Todas as propriedades sensíveis usam ${ENV_VAR} sem default,
+# forçando erro explícito na inicialização se a variável estiver ausente.
+# =============================================================================
+
+spring:
+    datasource:
+        url: ${DB_URL}
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+        hikari:
+            maximum-pool-size: 10
+            minimum-idle: 2
+            connection-timeout: 30000
+            idle-timeout: 600000
+            max-lifetime: 1800000
+
+    flyway:
+        # Em produção, baseline-on-migrate deve ser false para evitar
+        # que um banco parcialmente migrado seja tratado como novo.
+        baseline-on-migrate: false
+
+    jpa:
+        show-sql: false
+
+jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:86400000}
+
+zapi:
+    instance-id: ${ZAPI_INSTANCE_ID}
+    token: ${ZAPI_TOKEN}
+    client-token: ${ZAPI_CLIENT_TOKEN:}
+    webhook-secret: ${ZAPI_WEBHOOK_SECRET}
+    phone-number: ${ZAPI_PHONE_NUMBER}
+
+server:
+    port: ${SERVER_PORT:8080}
+
+logging:
+    level:
+        root: WARN
+        com.suporte.suporte_whatsapp: INFO
+        org.springframework.security: WARN
+        org.flywaydb: WARN

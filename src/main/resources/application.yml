@@ -1,13 +1,29 @@
+# =============================================================================
+# application.yml — configuração BASE (compartilhada por todos os perfis)
+#
+# Valores sensíveis (senhas, tokens, secrets) devem ser sobrescritos via
+# variáveis de ambiente em produção. Cada propriedade sensível tem um
+# placeholder no formato ${ENV_VAR:valor_default_para_dev}.
+#
+# Perfis disponíveis:
+#   (nenhum)  → desenvolvimento local, usa os defaults abaixo
+#   prod      → application-prod.yml sobrescreve datasource, logging e zapi
+#
+# Para ativar o perfil de produção:
+#   SPRING_PROFILES_ACTIVE=prod
+# =============================================================================
+
 spring:
     datasource:
-        url: jdbc:postgresql://localhost:5432/suporte_db
-        username: postgres
-        password: admin
+        url: ${DB_URL:jdbc:postgresql://localhost:5432/suporte_db}
+        username: ${DB_USERNAME:postgres}
+        password: ${DB_PASSWORD:admin}
 
     flyway:
         enabled: true
         locations: classpath:db/migration
         baseline-on-migrate: true
+
     jpa:
         hibernate:
             ddl-auto: validate
@@ -15,23 +31,70 @@ spring:
         properties:
             hibernate:
                 format_sql: true
+
     jackson:
         serialization:
             write-dates-as-timestamps: false
         time-zone: America/Sao_Paulo
 
+# -----------------------------------------------------------------------------
+# JWT
+# Em produção, gerar um secret forte com:
+#   openssl rand -base64 64
+# -----------------------------------------------------------------------------
 jwt:
-    secret: yrX1Pg0omEMYaDgrBv0civYFd5tUexqqA/HdRCO4EKWYx6DAeWZjSLbIkn2wweRk
-    expiration: 86400000
+    secret: ${JWT_SECRET:yrX1Pg0omEMYaDgrBv0civYFd5tUexqqA/HdRCO4EKWYx6DAeWZjSLbIkn2wweRk}
+    expiration: ${JWT_EXPIRATION:86400000}
 
+# -----------------------------------------------------------------------------
+# SLA — tempos em minutos
+# -----------------------------------------------------------------------------
 sla:
     alerta-minutos: 5
     critico-minutos: 15
     escalado-minutos: 30
 
-server:
-    port: 8080
+# -----------------------------------------------------------------------------
+# Integração Z-API
+# Documentação: https://developer.z-api.io
+#
+# instance-id    : ID da instância criada no painel da Z-API
+# token          : Token de autenticação da instância
+# client-token   : Token de segurança avançada (Security Passphrase) —
+#                  deixar em branco se não habilitado na conta
+# webhook-secret : Passphrase configurada em Segurança → Webhook no painel
+#                  da Z-API. Deve ser idêntico ao valor enviado no header
+#                  "Client-Token" de cada webhook recebido.
+# phone-number   : Número do WhatsApp vinculado à instância, formato
+#                  internacional sem "+": ex. 5565999990000
+# base-url       : URL base da API (não alterar salvo em ambientes privados)
+# -----------------------------------------------------------------------------
+zapi:
+    base-url: https://api.z-api.io
+    instance-id: ${ZAPI_INSTANCE_ID:SEU_INSTANCE_ID}
+    token: ${ZAPI_TOKEN:SEU_TOKEN}
+    client-token: ${ZAPI_CLIENT_TOKEN:}
+    webhook-secret: ${ZAPI_WEBHOOK_SECRET:SEU_WEBHOOK_SECRET}
+    phone-number: ${ZAPI_PHONE_NUMBER:5565999990000}
 
+server:
+    port: ${SERVER_PORT:8080}
+
+# -----------------------------------------------------------------------------
+# Logging
+#
+# Níveis por pacote:
+#   root                          → WARN  (silencia libs de terceiros)
+#   com.suporte.suporte_whatsapp  → INFO  (logs de negócio do sistema)
+#   org.springframework.security  → WARN  (era TRACE — muito verboso em prod)
+#   org.flywaydb                  → INFO  (visibilidade nas migrations)
+#
+# Para debug pontual em dev, sobrescreva via variável de ambiente:
+#   LOGGING_LEVEL_COM_SUPORTE_SUPORTE_WHATSAPP=DEBUG
+# -----------------------------------------------------------------------------
 logging:
     level:
-        org.springframework.security: TRACE
+        root: WARN
+        com.suporte.suporte_whatsapp: INFO
+        org.springframework.security: WARN
+        org.flywaydb: INFO
