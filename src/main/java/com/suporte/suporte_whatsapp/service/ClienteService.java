@@ -4,7 +4,10 @@ import com.suporte.suporte_whatsapp.dto.*;
 import com.suporte.suporte_whatsapp.model.Cliente;
 import com.suporte.suporte_whatsapp.model.enums.ChamadoStatus;
 import com.suporte.suporte_whatsapp.repository.*;
+import com.suporte.suporte_whatsapp.specification.ClienteSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
@@ -16,9 +19,10 @@ public class ClienteService {
     private final ClienteRepository clienteRepository;
     private final ChamadoRepository chamadoRepository;
 
-    public List<ClienteResponse> listar(String nome, String cidade, String cpfCnpj) {
-        return clienteRepository.findAllAtivosComFiltro(nome, cidade, cpfCnpj)
-                .stream().map(ClienteResponse::from).toList();
+    public Page<ClienteResponse> listar(String nome, String cidade, String cpfCnpj, Pageable pageable) {
+        return clienteRepository
+                .findAll(ClienteSpecification.comFiltros(nome, cidade, cpfCnpj), pageable)
+                .map(ClienteResponse::from);
     }
 
     public ClienteResponse buscarPorId(UUID id) {
