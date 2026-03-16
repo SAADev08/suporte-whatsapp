@@ -34,7 +34,7 @@ public class Chamado {
     private String solucao;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status_atual", nullable = false)
+    @Column(name = "status_atual", nullable = false, columnDefinition = "chamado_status_enum")
     private ChamadoStatus statusAtual;
 
     @Column(name = "dt_abertura", nullable = false)
@@ -53,7 +53,7 @@ public class Chamado {
     private Long tempoTotalSegundos;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "origem_enum")
     private Origem origem;
 
     @ManyToOne(fetch = FetchType.LAZY)

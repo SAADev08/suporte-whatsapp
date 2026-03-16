@@ -23,6 +23,9 @@ public class Chat {
     @Column(updatable = false, nullable = false, columnDefinition = "uuid")
     private UUID id;
 
+    @Column(name = "message_id")
+    private String messageId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_chamado")
     private Chamado chamado;

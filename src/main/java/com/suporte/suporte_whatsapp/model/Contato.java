@@ -35,6 +35,25 @@ public class Contato {
     @Builder.Default
     private Boolean ativo = true;
 
+    /**
+     * Indica que este contato foi criado automaticamente via webhook (número
+     * desconhecido) e ainda não possui vínculo com nenhum Cliente.
+     *
+     * Enquanto TRUE:
+     * - Mensagens continuam sendo salvas normalmente em CHAT.
+     * - O analista é alertado via WebSocket (/topic/contatos-pendentes).
+     * - A criação de chamados fica bloqueada até a vinculação ser feita.
+     *
+     * Passa para FALSE quando o analista vincula o contato a pelo menos
+     * um Cliente via PUT /api/contatos/{id} (ContatoService.atualizar).
+     *
+     * DISTINÇÃO: ativo=false significa inativação manual; este campo
+     * é exclusivo para o fluxo de triagem de contatos novos via webhook.
+     */
+    @Column(name = "pendente_vinculacao", nullable = false)
+    @Builder.Default
+    private Boolean pendenteVinculacao = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
