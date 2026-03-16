@@ -1,27 +1,30 @@
 package com.suporte.suporte_whatsapp.repository;
 
 import com.suporte.suporte_whatsapp.model.Contato;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.*;
 
-public interface ContatoRepository extends JpaRepository<Contato, UUID> {
-        boolean existsByTelefone(String telefone);
+public interface ContatoRepository extends JpaRepository<Contato, UUID>,
+    JpaSpecificationExecutor<Contato> {
 
-        boolean existsByTelefoneAndIdNot(String telefone, UUID id);
+  boolean existsByTelefone(String telefone);
 
-        Optional<Contato> findByTelefone(String telefone);
+  boolean existsByTelefoneAndIdNot(String telefone, UUID id);
 
-        @Query(value = """
-                        SELECT * FROM contato c
-                        WHERE c.ativo = true
-                          AND (:nome IS NULL OR LOWER(c.nome) LIKE LOWER(CONCAT('%', :nome, '%')))
-                          AND (:telefone IS NULL OR c.telefone LIKE CONCAT('%', :telefone, '%'))
-                          AND (:email IS NULL OR LOWER(c.email) LIKE LOWER(CONCAT('%', :email, '%')))
-                        """, nativeQuery = true)
-        List<Contato> findAllAtivosComFiltro(
-                        @Param("nome") String nome,
-                        @Param("telefone") String telefone,
-                        @Param("email") String email);
+  Optional<Contato> findByTelefone(String telefone);
+
+  /**
+   * Retorna contatos criados via webhook que ainda não possuem
+   * vínculo com nenhum Cliente, ordenados pelo mais recente.
+   *
+   * Alimenta o endpoint GET /api/contatos/pendentes e é usado
+   * pelo ContatoService para reemitir alertas WebSocket na
+   * reconexão do frontend.
+   */
+  Page<Contato> findByPendenteVinculacaoTrueOrderByCreatedAtDesc(Pageable pageable);
+
 }
