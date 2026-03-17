@@ -33,6 +33,20 @@ jwt:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION:86400000}
 
+# -----------------------------------------------------------------------------
+# Proteção contra brute-force no login
+#
+# Em produção os valores são obrigatórios via variável de ambiente —
+# sem default intencional para forçar decisão explícita no deploy.
+#
+# Referência de valores recomendados:
+#   BRUTE_FORCE_MAX_TENTATIVAS=5
+#   BRUTE_FORCE_BLOQUEIO_MINUTOS=15
+# -----------------------------------------------------------------------------
+brute-force:
+    max-tentativas: ${BRUTE_FORCE_MAX_TENTATIVAS}
+    bloqueio-minutos: ${BRUTE_FORCE_BLOQUEIO_MINUTOS}
+
 zapi:
     instance-id: ${ZAPI_INSTANCE_ID}
     token: ${ZAPI_TOKEN}

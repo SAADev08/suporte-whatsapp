@@ -55,6 +55,29 @@ sla:
     escalado-minutos: 30
 
 # -----------------------------------------------------------------------------
+# Proteção contra brute-force no login
+#
+# max-tentativas    : número de falhas consecutivas antes do bloqueio
+# bloqueio-minutos  : duração do bloqueio após atingir o limite
+#
+# Comportamento:
+#   - Contador é por e-mail, armazenado em memória (ConcurrentHashMap).
+#   - Após bloqueio-minutos sem nova tentativa, o bloqueio é liberado
+#     automaticamente na próxima requisição.
+#   - Login bem-sucedido zera o contador imediatamente.
+#   - Reinício da aplicação limpa todos os contadores (aceitável para MVP).
+#
+# Em produção, os valores podem ser sobrescritos via variável de ambiente:
+#   BRUTE_FORCE_MAX_TENTATIVAS=5
+#   BRUTE_FORCE_BLOQUEIO_MINUTOS=15
+# -----------------------------------------------------------------------------
+brute-force:
+    max-tentativas: ${BRUTE_FORCE_MAX_TENTATIVAS:5}
+    bloqueio-minutos: ${BRUTE_FORCE_BLOQUEIO_MINUTOS:15}
+
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # Integração Z-API
 # Documentação: https://developer.z-api.io
 #
