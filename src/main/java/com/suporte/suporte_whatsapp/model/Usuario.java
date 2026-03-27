@@ -34,7 +34,7 @@ public class Usuario {
     private String senha;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "perfil_enum")
+    @Column(nullable = false)
     private Perfil perfil;
 
     @Column(nullable = false)
