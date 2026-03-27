@@ -1,8 +1,10 @@
 package com.suporte.suporte_whatsapp.controller;
 
 import com.suporte.suporte_whatsapp.dto.*;
+import com.suporte.suporte_whatsapp.model.Usuario;
 import com.suporte.suporte_whatsapp.model.enums.*;
 import com.suporte.suporte_whatsapp.service.ChamadoService;
+import com.suporte.suporte_whatsapp.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.*;
 import org.springframework.data.domain.Page;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
@@ -19,6 +22,7 @@ import java.util.*;
 public class ChamadoController {
 
     private final ChamadoService service;
+    private final UsuarioService usuarioService;
 
     @GetMapping
     public ResponseEntity<Page<ChamadoResponse>> listar(
@@ -36,8 +40,9 @@ public class ChamadoController {
     }
 
     @PostMapping
-    public ResponseEntity<ChamadoResponse> criar(@Valid @RequestBody ChamadoRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(req));
+    public ResponseEntity<ChamadoResponse> criar(@Valid @RequestBody ChamadoRequest req, Authentication auth) {
+        Usuario resp = usuarioService.findByEmailOrThrow(auth.getName());
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(req, resp));
     }
 
     @PutMapping("/{id}")
