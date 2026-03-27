@@ -109,4 +109,33 @@ public interface ChatRepository extends JpaRepository<Chat, UUID> {
         )
       """)
   List<Object[]> findUltimaMensagemPorContatos(@Param("contatoIds") List<UUID> contatoIds);
+
+  // -------------------------------------------------------------------------
+  // Conversa unificada — todas as mensagens de um contato (todos os chamados)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Retorna TODAS as mensagens de um contato em ordem cronológica,
+   * independente do chamado ao qual estejam vinculadas (ou sem chamado).
+   *
+   * Usado pelo endpoint GET /api/chat/contato/{contatoId} para exibir
+   * a timeline unificada por contato. O campo chamadoId em cada item
+   * permite ao frontend renderizar marcadores visuais de abertura/encerramento
+   * de chamado dentro da linha do tempo contínua.
+   */
+  Page<Chat> findByContatoIdOrderByDtEnvioAsc(UUID contatoId, Pageable pageable);
+
+  // -------------------------------------------------------------------------
+  // Conversa de triagem — todas as mensagens de um contato sem chamado
+  // -------------------------------------------------------------------------
+
+  /**
+   * Retorna TODAS as mensagens (de qualquer origem) de um contato que ainda
+   * não possuem chamado vinculado, ordenadas cronologicamente.
+   *
+   * Usado pela tela de triagem para exibir o histórico completo da conversa
+   * antes de o analista criar um chamado formal, incluindo respostas que o
+   * suporte já tenha enviado diretamente pela triagem.
+   */
+  List<Chat> findByContatoIdAndChamadoIsNullOrderByDtEnvioAsc(UUID contatoId);
 }

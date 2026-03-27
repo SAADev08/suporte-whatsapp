@@ -12,6 +12,7 @@ public class ContatoResponse {
     private String telefone;
     private String email;
     private Boolean ativo;
+    private Boolean pendenteVinculacao;
     private List<ClienteResponse> clientes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -23,6 +24,7 @@ public class ContatoResponse {
         r.telefone = c.getTelefone();
         r.email = c.getEmail();
         r.ativo = c.getAtivo();
+        r.pendenteVinculacao = c.getPendenteVinculacao();
         r.createdAt = c.getCreatedAt();
         r.updatedAt = c.getUpdatedAt();
         r.clientes = c.getClientes().stream().map(ClienteResponse::from).toList();
