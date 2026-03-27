@@ -27,6 +27,7 @@ public interface ChatRepository extends JpaRepository<Chat, UUID> {
       SELECT c FROM Chat c
       WHERE c.origem = com.suporte.suporte_whatsapp.model.enums.ChatOrigem.CLIENTE
         AND c.chamado IS NOT NULL
+        AND c.chamado.statusAtual <> com.suporte.suporte_whatsapp.model.enums.ChamadoStatus.ENCERRADO
         AND c.dtEnvio < :limite
         AND NOT EXISTS (
             SELECT r FROM Chat r
@@ -36,6 +37,42 @@ public interface ChatRepository extends JpaRepository<Chat, UUID> {
         )
       """)
   List<Chat> findMensagensSemResposta(@Param("limite") LocalDateTime limite);
+
+  /**
+   * Retorna a mensagem mais antiga por contato na fila de triagem
+   * (sem chamado) que ainda não recebeu resposta do suporte.
+   *
+   * Usada pelo SlaScheduler para cobrir o RF13 — "notificar quando nova
+   * mensagem chegar" — incluindo mensagens que ainda não foram vinculadas
+   * a um chamado formal. A query agrupa por contato e devolve apenas a
+   * mensagem mais antiga de cada um (a que define o tempo de espera de SLA).
+   *
+   * Lógica de "sem resposta": não existe nenhuma mensagem de SUPORTE
+   * para o mesmo contato, sem chamado, posterior à mensagem do cliente.
+   * Isso inclui respostas enviadas diretamente na triagem (origem=SUPORTE,
+   * chamado=NULL), que são a forma de "atender" sem abrir chamado formal.
+   */
+  @Query("""
+      SELECT c FROM Chat c
+      JOIN FETCH c.contato
+      WHERE c.origem = com.suporte.suporte_whatsapp.model.enums.ChatOrigem.CLIENTE
+        AND c.chamado IS NULL
+        AND c.dtEnvio < :limite
+        AND NOT EXISTS (
+            SELECT r FROM Chat r
+            WHERE r.contato.id = c.contato.id
+              AND r.chamado IS NULL
+              AND r.origem = com.suporte.suporte_whatsapp.model.enums.ChatOrigem.SUPORTE
+              AND r.dtEnvio > c.dtEnvio
+        )
+        AND c.dtEnvio = (
+            SELECT MIN(c2.dtEnvio) FROM Chat c2
+            WHERE c2.contato.id = c.contato.id
+              AND c2.chamado IS NULL
+              AND c2.origem = com.suporte.suporte_whatsapp.model.enums.ChatOrigem.CLIENTE
+        )
+      """)
+  List<Chat> findMensagensTriagemSemResposta(@Param("limite") LocalDateTime limite);
 
   // -------------------------------------------------------------------------
   // Fila agrupada por contato — GET /api/chat/fila/agrupada

@@ -26,6 +26,8 @@ public class ChamadoService {
     private final UsuarioService usuarioService;
     private final SubtipoRepository subtipoRepository;
     private final SimpMessagingTemplate ws;
+    private final SlaNotificacaoCache slaCache;
+    private final TriagemNotificacaoCache triagemCache;
 
     public Page<ChamadoResponse> listar(ChamadoStatus status, Origem origem,
             UUID contatoId, UUID usuarioId, Pageable pageable) {
@@ -43,11 +45,9 @@ public class ChamadoService {
     }
 
     @Transactional
-    public ChamadoResponse criar(ChamadoRequest req) {
+    public ChamadoResponse criar(ChamadoRequest req, Usuario resp) {
         Contato contato = contatoService.findOrThrow(req.getContatoId());
-        Usuario responsavel = req.getUsuarioResponsavelId() != null
-                ? usuarioService.findOrThrow(req.getUsuarioResponsavelId())
-                : null;
+
         Subtipo subtipo = req.getSubtipoId() != null
                 ? subtipoRepository.findById(req.getSubtipoId())
                         .orElseThrow(() -> new IllegalArgumentException("Subtipo não encontrado"))
@@ -64,7 +64,7 @@ public class ChamadoService {
                 .texto(req.getTexto()).categoria(req.getCategoria())
                 .statusAtual(ChamadoStatus.AGUARDANDO).origem(req.getOrigem())
                 .dtAbertura(agora).dtPrimeiraMensagem(dtPrimeiraMensagem)
-                .contato(contato).usuarioResponsavel(responsavel).subtipo(subtipo)
+                .contato(contato).usuarioResponsavel(resp).subtipo(subtipo)
                 .build();
         chamado = chamadoRepository.save(chamado);
 
@@ -76,8 +76,9 @@ public class ChamadoService {
             });
         }
 
-        abrirHistorico(chamado, ChamadoStatus.AGUARDANDO, responsavel);
-        ws.convertAndSend("/topic/chamados/" + chamado.getId(), ChamadoResponse.from(chamado));
+        triagemCache.limpar(contato.getId());
+        abrirHistorico(chamado, ChamadoStatus.AGUARDANDO, resp);
+        ws.convertAndSend("/topic/chamados/" + chamado.getId(), WsEnvelope.of(ChamadoResponse.from(chamado)));
         return ChamadoResponse.from(chamado);
     }
 
@@ -101,10 +102,11 @@ public class ChamadoService {
             fecharHistoricoAtual(id);
             ch.setStatusAtual(req.getStatusAtual());
             abrirHistorico(ch, req.getStatusAtual(), ch.getUsuarioResponsavel());
+            slaCache.limpar(id);
         }
 
         ch = chamadoRepository.save(ch);
-        ws.convertAndSend("/topic/chamados/" + ch.getId(), ChamadoResponse.from(ch));
+        ws.convertAndSend("/topic/chamados/" + ch.getId(), WsEnvelope.of(ChamadoResponse.from(ch)));
         return ChamadoResponse.from(ch);
     }
 
@@ -125,8 +127,10 @@ public class ChamadoService {
         abrirHistorico(ch, ChamadoStatus.ENCERRADO, ch.getUsuarioResponsavel());
         fecharHistoricoAtual(id);
 
+        slaCache.limpar(id);
+
         ch = chamadoRepository.save(ch);
-        ws.convertAndSend("/topic/chamados/" + ch.getId(), ChamadoResponse.from(ch));
+        ws.convertAndSend("/topic/chamados/" + ch.getId(), WsEnvelope.of(ChamadoResponse.from(ch)));
         return ChamadoResponse.from(ch);
     }
 
