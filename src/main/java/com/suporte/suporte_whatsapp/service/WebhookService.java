@@ -260,7 +260,7 @@ public class WebhookService {
                         return LocalDateTime.now();
                 return LocalDateTime.ofInstant(
                                 Instant.ofEpochMilli(momment),
-                                ZoneId.of("America/Sao_Paulo"));
+                                ZoneId.of("America/Cuiaba"));
         }
 
         /**
