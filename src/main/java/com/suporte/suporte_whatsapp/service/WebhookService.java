@@ -3,6 +3,7 @@ package com.suporte.suporte_whatsapp.service;
 import com.suporte.suporte_whatsapp.dto.ChatResponse;
 import com.suporte.suporte_whatsapp.dto.ContatoPendenteResponse;
 import com.suporte.suporte_whatsapp.dto.WebhookWhatsappRequest;
+import com.suporte.suporte_whatsapp.dto.WsEnvelope;
 import com.suporte.suporte_whatsapp.model.*;
 import com.suporte.suporte_whatsapp.model.enums.*;
 import com.suporte.suporte_whatsapp.repository.*;
@@ -141,12 +142,14 @@ public class WebhookService {
                                 chamadoVinculado != null ? chamadoVinculado.getId() : "sem chamado");
 
                 // 8. Notificar frontends sobre a nova mensagem
-                ws.convertAndSend("/topic/mensagens", ChatResponse.from(chat));
+                ChatResponse chatResponse = ChatResponse.from(chat);
+                ws.convertAndSend("/topic/mensagens", WsEnvelope.of(chatResponse));
+                ws.convertAndSend("/topic/contato/" + contato.getId(), WsEnvelope.of(chatResponse));
 
                 // 9. Se o contato acabou de ser criado via webhook, alertar analistas
                 if (contatoNovo[0]) {
                         ContatoPendenteResponse alerta = ContatoPendenteResponse.from(contato);
-                        ws.convertAndSend("/topic/contatos-pendentes", alerta);
+                        ws.convertAndSend("/topic/contatos-pendentes", WsEnvelope.of(alerta));
                         log.info("[Webhook] Alerta de contato pendente emitido para número terminado em {}",
                                         ultimos4Digitos(msg.foneRemetente()));
                 }
